@@ -17,8 +17,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	user := models.User{1, "Arman"}
-	manga := models.NewManga()
-
+	manga, err := app.manga.Latest()
+	if err != nil {
+		app.serverError(w, err)
+	}
 	resp := make(map[string]any)
 	resp["user"] = user
 	resp["manga"] = manga
