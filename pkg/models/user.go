@@ -3,16 +3,17 @@ package models
 import "github.com/jackc/pgx/v4/pgxpool"
 
 type User struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 type UserModel struct {
 	DB *pgxpool.Pool
 }
 
-func (m *UserModel) Insert(title string, description string, author string, mangaType string) (*User, error) {
-	user := &User{1, "sdf"}
+func (m *UserModel) Insert(name string, email string, hashedPassword string) (*User, error) {
+	user := &User{1, "sdf", "sdf"}
 	return user, nil
 }
 

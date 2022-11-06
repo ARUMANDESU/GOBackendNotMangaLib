@@ -1,25 +1,28 @@
-package main
+package handler
 
 import (
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"log"
 	"net/http"
-	"notmangalib.com/internal/models"
+	"notmangalib.com/pkg/models"
 	"strconv"
 )
 
-func (app *application) home(w http.ResponseWriter, r *http.Request) {
+type Handler struct {
+}
+
+func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	user := models.User{1, "Arman"}
-	manga, err := app.manga.Latest()
+	user := models.User{1, "Arman", "zh.arumandes@gmail.com"}
+	manga, err := app.Manga.Latest()
 	if err != nil {
-		app.serverError(w, err)
+		app.ServerError(w, err)
 	}
 	resp := make(map[string]any)
 	resp["user"] = user
@@ -31,7 +34,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResp)
 }
 
-func (app *application) createManga(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) createManga(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", "POST")
 		app.clientError(w, http.StatusMethodNotAllowed)
@@ -47,7 +50,7 @@ func (app *application) createManga(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) getManga(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getManga(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.Atoi(params.ByName("id"))
 
@@ -63,5 +66,9 @@ func (app *application) getManga(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}
 	w.Write(jsonResp)
+
+}
+
+func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 
 }
