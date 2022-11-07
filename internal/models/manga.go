@@ -15,6 +15,7 @@ type Manga struct {
 	Author          string    `json:"author"`
 	Type            string    `json:"type"`
 	LastUpdatedTime time.Time `json:"lastUpdatedTime"`
+	Status          string    `json:"status"`
 }
 
 func NewManga() *Manga {
@@ -54,7 +55,7 @@ func (m *MangaModel) Get(id int) (*Manga, error) {
 }
 
 func (m *MangaModel) Latest() ([]*Manga, error) {
-	stmt := `select * from manga order by last_updated_time desc`
+	stmt := `select mangaid,name,description, author, type, last_updated_time, status  from manga order by last_updated_time desc limit 50;`
 	rows, err := m.DB.Query(context.Background(), stmt)
 	if err != nil {
 		return nil, err
@@ -68,7 +69,7 @@ func (m *MangaModel) Latest() ([]*Manga, error) {
 
 		manga1 := &Manga{}
 
-		err = rows.Scan(&manga1.Id, &manga1.Name, &manga1.Description, &manga1.Author, &manga1.Type, &manga1.LastUpdatedTime)
+		err = rows.Scan(&manga1.Id, &manga1.Name, &manga1.Description, &manga1.Author, &manga1.Type, &manga1.LastUpdatedTime, &manga1.Status)
 		if err != nil {
 			return nil, err
 		}

@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func (app *application) home(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
@@ -30,7 +30,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request, _ httproute
 	w.Write(jsonResp)
 }
 
-func (app *application) createManga(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (app *application) createManga(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", "POST")
 		app.clientError(w, http.StatusMethodNotAllowed)
@@ -46,7 +46,7 @@ func (app *application) createManga(w http.ResponseWriter, r *http.Request, _ ht
 
 }
 
-func (app *application) getManga(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (app *application) getManga(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.Atoi(params.ByName("id"))
 
@@ -65,7 +65,7 @@ func (app *application) getManga(w http.ResponseWriter, r *http.Request, _ httpr
 
 }
 
-func (app *application) signUp(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (app *application) signUp(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 
 	if err != nil {
@@ -103,7 +103,7 @@ func (app *application) signUp(w http.ResponseWriter, r *http.Request, _ httprou
 	w.Write(jsonResp)
 }
 
-func (app *application) signIN(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (app *application) signIN(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 
 	if err != nil {
@@ -117,6 +117,7 @@ func (app *application) signIN(w http.ResponseWriter, r *http.Request, _ httprou
 		app.errorLog.Println(err)
 		log.Fatal(err)
 	}
+	log.Println(user.Email, user.Password)
 
 	result, accesstoken, err := app.SignINService(user.Email, user.Password)
 	if err != nil {
