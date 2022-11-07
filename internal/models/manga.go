@@ -40,7 +40,7 @@ func (m *MangaModel) Insert(title string, description string, author string, man
 }
 
 func (m *MangaModel) Get(id int) (*Manga, error) {
-	stmt := `select * from manga where mangaid=$1;`
+	stmt := `select mangaid,name,description,author,type,last_updated_time from manga where mangaid=$1;`
 	manga := &Manga{}
 	err := m.DB.QueryRow(context.Background(), stmt, id).Scan(&manga.Id, &manga.Name, &manga.Description, &manga.Author, &manga.Type, &manga.LastUpdatedTime)
 	if err != nil {

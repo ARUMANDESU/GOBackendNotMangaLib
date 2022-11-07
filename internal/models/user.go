@@ -44,7 +44,14 @@ func (u *UserModel) Insert(name string, email string, hashedPassword string) (*U
 }
 
 func (u *UserModel) Get(id int) (*User, error) {
-	return nil, nil
+	stmt := `select userid,name,email,role from useri where userid=$1;`
+	user := &User{}
+	result := u.DB.QueryRow(context.Background(), stmt, id).Scan(&user.Id, &user.Name, &user.Email, &user.Role)
+	if result != nil {
+		return nil, result
+	}
+
+	return user, nil
 }
 
 func (u *UserModel) FindCheckUser(email string, password string) (*User, error) {

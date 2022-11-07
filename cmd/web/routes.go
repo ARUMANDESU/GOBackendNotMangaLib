@@ -21,11 +21,15 @@ func (app *application) routes() http.Handler {
 			header.Set("Access-Control-Allow-Credentials", "true")
 		}
 	})
+	fileServer := http.FileServer(http.Dir("./public/"))
+	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", app.ImageMiddleware(fileServer)))
+
 	router.HandlerFunc(http.MethodGet, "/", app.home)
 	router.HandlerFunc(http.MethodPost, "/manga/create", app.AuthMiddleware(app.createManga))
 	router.HandlerFunc(http.MethodGet, "/manga/:id", app.getManga)
 	router.HandlerFunc(http.MethodPost, "/signup", app.signUp)
 	router.HandlerFunc(http.MethodPost, "/signin", app.signIN)
+	router.HandlerFunc(http.MethodGet, "/user/:id", app.GetUser)
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 

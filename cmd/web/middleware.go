@@ -85,7 +85,14 @@ func (app *application) AuthMiddleware(next func(w http.ResponseWriter, r *http.
 }
 
 func (app *application) AuthAdminMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+	})
+}
+
+func (app *application) ImageMiddleware(next http.Handler) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/jng")
+		next.ServeHTTP(w, r)
 	})
 }
