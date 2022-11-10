@@ -17,6 +17,13 @@ type Manga struct {
 	LastUpdatedTime time.Time `json:"lastUpdatedTime"`
 	Status          string    `json:"status"`
 }
+type MangaCreate struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Author      string `json:"author"`
+	Type        string `json:"type"`
+	Status      string `json:"status"`
+}
 
 func NewManga() *Manga {
 	return &Manga{Id: 0, Name: "chainsaw man", Description: "something", Type: "Manga"}
@@ -26,12 +33,12 @@ type MangaModel struct {
 	DB *pgxpool.Pool
 }
 
-func (m *MangaModel) Insert(title string, description string, author string, mangaType string) (int, error) {
+func (m *MangaModel) Insert(title string, description string, author string, mangaType string, status string) (int, error) {
 
-	stmt := `insert into manga(name,description,author,type,last_updated_time)
-			values ($1,$2,$3,$4,current_timestamp) returning mangaid`
+	stmt := `insert into manga(name,description,author,type,last_updated_time,status,rating)
+			values ($1,$2,$3,$4,current_timestamp,$5,5) returning mangaid`
 	manga := &Manga{}
-	result := m.DB.QueryRow(context.Background(), stmt, title, description, author, mangaType).Scan(&manga.Id)
+	result := m.DB.QueryRow(context.Background(), stmt, title, description, author, mangaType, status).Scan(&manga.Id)
 	if result != nil {
 		return 0, result
 	}

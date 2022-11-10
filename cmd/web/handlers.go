@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
+	"io"
 	"log"
 	"net/http"
 	"notmangalib.com/internal/models"
+	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -36,13 +39,55 @@ func (app *application) createManga(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
 
-	_, err := app.manga.Insert("OnePunchMan", "Something...", "ME", "Manga")
+	var newManga = &models.MangaCreate{}
+	newManga.Name = r.Form.Get("name")
+	newManga.Description = r.Form.Get("description")
+	newManga.Type = r.Form.Get("type")
+	newManga.Status = r.Form.Get("status")
+	newManga.Author = r.Form.Get("author")
+
+	f, h, err := r.FormFile("file")
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	defer f.Close()
+	path := filepath.Join(".", "public")
+
+	_ = os.MkdirAll(path, os.ModePerm)
+
+	fullPath := path + "/" + newManga.Name
+	file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	defer file.Close()
+
+	log.Println(newManga.Name + filepath.Ext(h.Filename))
+	// Copy the file to the destination path
+	_, err = io.Copy(file, f)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	id, err := app.manga.Insert(newManga.Name, newManga.Description, newManga.Author, newManga.Type, newManga.Status)
 	if err != nil {
 		app.serverError(w, err)
 	}
-
-	w.Write([]byte("Create new manga..."))
+	resp := make(map[string]any)
+	resp["id"] = id
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+	w.Write(jsonResp)
 
 }
 

@@ -52,9 +52,9 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 func (app *application) AuthMiddleware(next func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		accessToken, err := r.Cookie("AccessToken")
-		log.Print(accessToken)
 		if err != nil {
 			w.WriteHeader(303)
+			log.Print(err)
 			return
 		}
 		_, e := app.VerifyToken(accessToken.Value)
