@@ -29,6 +29,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/manga/:id", app.getManga)
 	router.HandlerFunc(http.MethodPost, "/signup", app.signUp)
 	router.HandlerFunc(http.MethodPost, "/signin", app.signIN)
+	router.HandlerFunc(http.MethodPost, "/logout", app.Logout)
 	router.HandlerFunc(http.MethodGet, "/user/:id", app.GetUser)
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)

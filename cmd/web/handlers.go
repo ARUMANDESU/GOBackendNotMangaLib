@@ -213,3 +213,21 @@ func (app *application) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(jsonResp)
 }
+
+func (app *application) Logout(w http.ResponseWriter, r *http.Request) {
+	c := &http.Cookie{ //Deleting access token
+		Name:     "AccessToken",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+	}
+
+	http.SetCookie(w, c)
+	jsonResp, err := json.Marshal("ok")
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+	w.Write(jsonResp)
+}
