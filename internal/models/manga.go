@@ -16,6 +16,7 @@ type Manga struct {
 	Type            string    `json:"type"`
 	LastUpdatedTime time.Time `json:"lastUpdatedTime"`
 	Status          string    `json:"status"`
+	MangaImg        string    `json:"mangaImg"`
 }
 type MangaCreate struct {
 	Name        string `json:"name"`
@@ -47,9 +48,9 @@ func (m *MangaModel) Insert(title string, description string, author string, man
 }
 
 func (m *MangaModel) Get(id int) (*Manga, error) {
-	stmt := `select mangaid,name,description,author,type,last_updated_time from manga where mangaid=$1;`
+	stmt := `select mangaid,name,description,author,type,last_updated_time,status,mangaimg from manga where mangaid=$1;`
 	manga := &Manga{}
-	err := m.DB.QueryRow(context.Background(), stmt, id).Scan(&manga.Id, &manga.Name, &manga.Description, &manga.Author, &manga.Type, &manga.LastUpdatedTime)
+	err := m.DB.QueryRow(context.Background(), stmt, id).Scan(&manga.Id, &manga.Name, &manga.Description, &manga.Author, &manga.Type, &manga.LastUpdatedTime, &manga.Status, &manga.MangaImg)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNoRecord
@@ -62,7 +63,7 @@ func (m *MangaModel) Get(id int) (*Manga, error) {
 }
 
 func (m *MangaModel) Latest() ([]*Manga, error) {
-	stmt := `select mangaid,name,description, author, type, last_updated_time, status  from manga order by last_updated_time desc limit 50;`
+	stmt := `select mangaid,name,description, author, type, last_updated_time, status,mangaimg  from manga order by last_updated_time desc limit 50;`
 	rows, err := m.DB.Query(context.Background(), stmt)
 	if err != nil {
 		return nil, err
@@ -76,7 +77,7 @@ func (m *MangaModel) Latest() ([]*Manga, error) {
 
 		manga1 := &Manga{}
 
-		err = rows.Scan(&manga1.Id, &manga1.Name, &manga1.Description, &manga1.Author, &manga1.Type, &manga1.LastUpdatedTime, &manga1.Status)
+		err = rows.Scan(&manga1.Id, &manga1.Name, &manga1.Description, &manga1.Author, &manga1.Type, &manga1.LastUpdatedTime, &manga1.Status, &manga1.MangaImg)
 		if err != nil {
 			return nil, err
 		}
@@ -89,4 +90,14 @@ func (m *MangaModel) Latest() ([]*Manga, error) {
 	}
 
 	return manga, nil
+}
+
+func (m *MangaModel) ChangeImg(id int, imgPath string) error {
+	imgPath = "http://localhost:5000" + imgPath
+	stmt := `update manga set mangaimg=$1 where mangaid=$2;`
+	_, err := m.DB.Exec(context.Background(), stmt, imgPath, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

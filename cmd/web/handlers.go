@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"io"
 	"log"
@@ -52,17 +53,24 @@ func (app *application) createManga(w http.ResponseWriter, r *http.Request) {
 	newManga.Status = r.Form.Get("status")
 	newManga.Author = r.Form.Get("author")
 
-	f, h, err := r.FormFile("file")
+	f, h, err := r.FormFile("mangaImg")
 	if err != nil {
 		app.errorLog.Println(err)
 		return
 	}
+
+	id, err := app.manga.Insert(newManga.Name, newManga.Description, newManga.Author, newManga.Type, newManga.Status)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
 	defer f.Close()
-	path := filepath.Join(".", "public")
+	path := filepath.Join(".", fmt.Sprintf("public/manga/%d", id))
 
 	_ = os.MkdirAll(path, os.ModePerm)
 
-	fullPath := path + "/" + newManga.Name
+	fullPath := path + "/" + "mangaImg" + filepath.Ext(h.Filename)
+	staticPath := fmt.Sprintf("/static/manga/%d/", id) + "mangaImg" + filepath.Ext(h.Filename)
 	file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		app.errorLog.Println(err)
@@ -70,17 +78,20 @@ func (app *application) createManga(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	log.Println(newManga.Name + filepath.Ext(h.Filename))
 	// Copy the file to the destination path
 	_, err = io.Copy(file, f)
 	if err != nil {
 		app.errorLog.Println(err)
 		return
 	}
-	id, err := app.manga.Insert(newManga.Name, newManga.Description, newManga.Author, newManga.Type, newManga.Status)
+
+	log.Print(staticPath)
+	err = app.manga.ChangeImg(id, staticPath)
 	if err != nil {
-		app.serverError(w, err)
+		app.errorLog.Println(err)
+		return
 	}
+
 	resp := make(map[string]any)
 	resp["id"] = id
 	jsonResp, err := json.Marshal(resp)
