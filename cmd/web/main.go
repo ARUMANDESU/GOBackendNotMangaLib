@@ -20,7 +20,7 @@ type application struct {
 
 func main() {
 
-	dbConn, dbErr := pgxpool.Connect(context.Background(), "postgres://postgres:545454sdfD@localhost:5432/notMangaLib") // write your own database password
+	dbConn, dbErr := pgxpool.Connect(context.Background(), "postgres://postgres:admin@localhost:5432/notMangaLib") // write your own database password
 	if dbErr != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", dbErr)
 		os.Exit(1)
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err := srv.ListenAndServe()
+	err := srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	errorLog.Fatal(err)
 
 }
