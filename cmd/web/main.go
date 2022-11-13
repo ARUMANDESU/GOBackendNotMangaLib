@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"notmangalib.com/internal/models"
@@ -21,8 +22,13 @@ type application struct {
 }
 
 func main() {
-
-	dbConn, dbErr := pgxpool.Connect(context.Background(), "postgres://postgres:admin@localhost:5432/notMangaLib") // write your own database password
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	dataBasePassword := os.Getenv("dataBasePassword")
+	dataBaseName := os.Getenv("dataBaseName")
+	dbConn, dbErr := pgxpool.Connect(context.Background(), fmt.Sprintf("postgres://postgres:%s@localhost:5432/%s", dataBasePassword, dataBaseName))
 	if dbErr != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", dbErr)
 		os.Exit(1)
@@ -77,7 +83,7 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err := srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	err = srv.ListenAndServe() // if you want make it https => err := srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	errorLog.Fatal(err)
 
 }
