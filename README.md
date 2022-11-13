@@ -11,7 +11,8 @@ create table manga
     type              varchar,
     last_updated_time timestamp,
     status            varchar,
-    rating            double precision
+    rating            double precision,
+    mangaImg varchar default ''
 );
 create table mangateam
 (
@@ -41,13 +42,30 @@ create table teamuser
 );
 create table useri
 (
-    userid          serial
-        primary key,
+    userid          serial primary key,
     name            varchar(50) not null,
     email           varchar
         constraint unique_email
             unique,
     hashed_password char(60)    not null,
     role            varchar
+);
+
+create table chapter(
+    chapterid serial primary key,
+    title varchar default '',
+    images varchar default '',
+    chapter_number numeric(5,1),
+    volume_number numeric(4)
+);
+
+create table manga_chapter(
+      chapterid integer
+          constraint fk_chapterid
+              references chapter(chapterid),
+      mangaid integer
+          constraint fk_mangaid
+              references manga(mangaid)
+
 );
 ```
