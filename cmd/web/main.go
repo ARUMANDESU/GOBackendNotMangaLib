@@ -26,8 +26,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	dataBasePassword := os.Getenv("dataBasePassword")
-	dataBaseName := os.Getenv("dataBaseName")
+	dataBasePassword := os.Getenv("database_password")
+	dataBaseName := os.Getenv("database_name")
 	dbConn, dbErr := pgxpool.Connect(context.Background(), fmt.Sprintf("postgres://postgres:%s@localhost:5432/%s", dataBasePassword, dataBaseName))
 	if dbErr != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", dbErr)

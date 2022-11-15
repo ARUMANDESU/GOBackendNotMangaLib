@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/jackc/pgx/v4 v4.17.2
+	github.com/joho/godotenv v1.4.0
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/justinas/alice v1.2.0
 	golang.org/x/crypto v0.1.0
@@ -20,6 +21,5 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.12.0 // indirect
 	github.com/jackc/puddle v1.3.0 // indirect
-	github.com/joho/godotenv v1.4.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 )
