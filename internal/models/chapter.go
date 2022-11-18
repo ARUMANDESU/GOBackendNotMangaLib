@@ -59,3 +59,30 @@ func (ch *ChapterModel) Get(mangaId int, chapterNum float64, volumeNum float64) 
 
 	return &chapter, nil
 }
+
+func (ch *ChapterModel) GetMangaChapters(mangaId int) ([]*Chapter, error) {
+	stmt := `select ch.chapterid,m.mangaid,ch.title,ch.volume_number,ch.chapter_number,ch.images
+			from chapter ch join manga_chapter mc on ch.chapterid = mc.chapterid 
+						join manga m on m.mangaid = mc.mangaid
+						where m.mangaid=$1`
+	rows, err := ch.DB.Query(context.Background(), stmt, mangaId)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	chapter := []*Chapter{}
+	for rows.Next() {
+		chapter1 := &Chapter{}
+		result := ch.DB.QueryRow(context.Background(), stmt, mangaId).Scan(&chapter1.Id, &chapter1.MangaId, &chapter1.Title, &chapter1.VolumeNumber, &chapter1.ChapterNumber, &chapter1.Images)
+		if result != nil {
+			return nil, result
+		}
+		chapter = append(chapter, chapter1)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return chapter, nil
+}

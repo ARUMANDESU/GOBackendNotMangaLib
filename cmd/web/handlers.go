@@ -211,8 +211,14 @@ func (app *application) getManga(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
+	chapters, err := app.chapter.GetMangaChapters(id)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
 	resp := make(map[string]any)
 	resp["manga"] = manga
+	resp["chapters"] = chapters
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
