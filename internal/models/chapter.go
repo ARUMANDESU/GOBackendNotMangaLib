@@ -3,28 +3,59 @@ package models
 import (
 	"context"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"time"
 )
 
 type Chapter struct {
-	Id            int      `json:"id"`
-	Title         string   `json:"title"`
-	ChapterNumber string   `json:"chapterNumber"`
-	VolumeNumber  string   `json:"volumeNumber"`
-	Images        []string `json:"images"`
+	Id            int       `json:"id"`
+	MangaId       int       `json:"mangaId"`
+	Title         string    `json:"title"`
+	ChapterNumber float64   `json:"chapterNumber"`
+	VolumeNumber  float64   `json:"volumeNumber"`
+	Images        []string  `json:"images"`
+	Date          time.Time `json:"date"`
 }
 
 type ChapterModel struct {
 	DB *pgxpool.Pool
 }
 
-func (ch *ChapterModel) Insert(title string, images []string, chapterNum float64, volumeNum float64) (int, error) {
-	stmt := `insert into chapter(images, chapter_number, volume_number, title)
-				values ($1,$2,$3,$4) returning chapterid`
+func (ch *ChapterModel) Insert(mangaId int, title string, chapterNum float64, volumeNum float64) (int, error) {
+	stmt := `insert into chapter(chapter_number, volume_number, title)
+				values ($1,$2,$3) returning chapterid;`
 	newChapter := Chapter{}
-	result := ch.DB.QueryRow(context.Background(), stmt, images, chapterNum, volumeNum, title).Scan(&newChapter.Id)
+	result := ch.DB.QueryRow(context.Background(), stmt, chapterNum, volumeNum, title).Scan(&newChapter.Id)
 	if result != nil {
 		return 0, result
 	}
 
+	stmt = `insert into manga_chapter(chapterid, mangaid) values($1,$2);`
+	_, err := ch.DB.Exec(context.Background(), stmt, newChapter.Id, mangaId)
+	if err != nil {
+		return 0, err
+	}
+
 	return newChapter.Id, nil
+}
+
+func (ch *ChapterModel) ChangeImages(id int, imagesPaths []string) error {
+	stmt := `update chapter set images=$1 where chapterid=$2;`
+	_, err := ch.DB.Exec(context.Background(), stmt, imagesPaths, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (ch *ChapterModel) Get(mangaId int, chapterNum float64, volumeNum float64) (*Chapter, error) {
+	stmt := `select ch.chapterid,m.mangaid,ch.title,ch.volume_number,ch.chapter_number,ch.images
+			from chapter ch join manga_chapter mc on ch.chapterid = mc.chapterid 
+						join manga m on m.mangaid = mc.mangaid
+						where m.mangaid=$1 and ch.chapter_number=$2 and ch.volume_number=$3 `
+	chapter := Chapter{}
+	result := ch.DB.QueryRow(context.Background(), stmt, mangaId, chapterNum, volumeNum).Scan(&chapter.Id, &chapter.MangaId, &chapter.Title, &chapter.VolumeNumber, &chapter.ChapterNumber, &chapter.Images)
+	if result != nil {
+		return nil, result
+	}
+
+	return &chapter, nil
 }

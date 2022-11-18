@@ -26,7 +26,9 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/", app.home)
 	router.HandlerFunc(http.MethodPost, "/manga/create", app.AuthMiddleware(app.createManga))
+	router.HandlerFunc(http.MethodPost, "/manga/add-chapter/:id", app.AuthMiddleware(app.addChapter))
 	router.HandlerFunc(http.MethodGet, "/manga/:id", app.getManga)
+	router.HandlerFunc(http.MethodGet, "/manga/:id/:v/:ch,", app.getChapter)
 	router.HandlerFunc(http.MethodPost, "/signup", app.signUp)
 	router.HandlerFunc(http.MethodPost, "/signin", app.signIN)
 	router.HandlerFunc(http.MethodPost, "/logout", app.Logout)

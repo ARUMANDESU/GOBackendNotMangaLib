@@ -101,11 +101,111 @@ func (app *application) createManga(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResp)
 
 }
+func (app *application) addChapter(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", "POST")
+		app.clientError(w, http.StatusMethodNotAllowed)
+		return
+	}
+	params := httprouter.ParamsFromContext(r.Context())
+	mangaId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	err = r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+
+	var newChapter = &models.Chapter{}
+	newChapter.Title = r.Form.Get("title")
+	newChapter.VolumeNumber, _ = strconv.ParseFloat(r.Form.Get("volumeNumber"), 64)
+	newChapter.ChapterNumber, _ = strconv.ParseFloat(r.Form.Get("chapterNumber"), 64)
+
+	id, err := app.chapter.Insert(mangaId, newChapter.Title, newChapter.ChapterNumber, newChapter.VolumeNumber)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	imagesPaths := make([]string, 10)
+
+	fhs := r.MultipartForm.File["images"]
+	for _, fh := range fhs {
+		f, err := fh.Open()
+		if err != nil {
+			app.errorLog.Println(err)
+			return
+		}
+		defer f.Close()
+		path := filepath.Join(".", fmt.Sprintf("public/manga/%d/v%s/ch%s", mangaId, r.Form.Get("volumeNumber"), r.Form.Get("chapterNumber"))) // v-volume  ch-chapter
+
+		_ = os.MkdirAll(path, os.ModePerm)
+
+		fullPath := path + "/" + fh.Filename
+		staticPath := fmt.Sprintf("static/manga/%d/v%s/ch%s", mangaId, r.Form.Get("volumeNumber"), r.Form.Get("chapterNumber")) + "/" + fh.Filename
+		file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+		if err != nil {
+			app.errorLog.Println(err)
+			return
+		}
+		defer file.Close()
+
+		// Copy the file to the destination path
+		_, err = io.Copy(file, f)
+		if err != nil {
+			app.errorLog.Println(err)
+			return
+		}
+		log.Print(staticPath)
+		imagesPaths = append(imagesPaths, staticPath)
+	}
+
+	err = app.chapter.ChangeImages(id, imagesPaths)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+
+	resp := make(map[string]any)
+	resp["chapterNumber"] = newChapter.ChapterNumber
+	resp["volumeNumber"] = newChapter.VolumeNumber
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+	w.Write(jsonResp)
+}
+func (app *application) getChapter(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	mangaId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.serverError(w, err)
+	}
+	volumeId, err := strconv.ParseFloat(params[1].Value, 64)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	chapterId, err := strconv.ParseFloat(params[2].Value, 64)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	chapter, err := app.chapter.Get(mangaId, chapterId, volumeId)
+
+	resp := make(map[string]any)
+	resp["chapter"] = chapter
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+	w.Write(jsonResp)
+
+}
 
 func (app *application) getManga(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.Atoi(params.ByName("id"))
-
 	manga, err := app.manga.Get(id)
 	if err != nil {
 		app.serverError(w, err)

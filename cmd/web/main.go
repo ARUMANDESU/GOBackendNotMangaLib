@@ -19,6 +19,7 @@ type application struct {
 	infoLog  *log.Logger
 	manga    *models.MangaModel
 	user     *models.UserModel
+	chapter  *models.ChapterModel
 }
 
 func main() {
@@ -55,6 +56,7 @@ func main() {
 		infoLog:  infoLog,
 		manga:    &models.MangaModel{DB: dbConn},
 		user:     &models.UserModel{DB: dbConn},
+		chapter:  &models.ChapterModel{DB: dbConn},
 	}
 
 	tlsConfig := &tls.Config{

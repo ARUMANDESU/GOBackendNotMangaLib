@@ -51,12 +51,14 @@ create table useri
     role            varchar
 );
 
-create table chapter(
-    chapterid serial primary key,
-    title varchar default '',
-    images varchar default '',
-    chapter_number numeric(5,1),
-    volume_number numeric(4)
+create table chapter
+(
+    chapterid      serial
+        primary key,
+    chapter_number numeric(5, 1),
+    volume_number  numeric(4),
+    title          varchar default ''::character varying,
+    images         character varying[]
 );
 
 create table manga_chapter(
