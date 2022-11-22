@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 	"io"
 	"log"
 	"net/http"
@@ -129,7 +130,7 @@ func (app *application) addChapter(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Println(err)
 		return
 	}
-	imagesPaths := make([]string, 10)
+	imagesPaths := make([]string, 0)
 
 	fhs := r.MultipartForm.File["images"]
 	for _, fh := range fhs {
@@ -287,6 +288,7 @@ func (app *application) signIN(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
+	log.Println(accesstoken)
 
 	AccessTokenCookie := &http.Cookie{
 		Name:     "AccessToken",
@@ -311,9 +313,16 @@ func (app *application) GetUser(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(params.ByName("id"))
 	result, err := app.user.Get(id)
 
+	isOwner, ok := r.Context().Value("isOwner").(bool)
+	if !ok {
+		log.Println(errors.New("could not convert value to bool"))
+		return
+	}
 	resp := make(map[string]any)
 	resp["user"] = result
+	resp["owner"] = isOwner
 	jsonResp, err := json.Marshal(resp)
+	log.Println(resp["user"])
 	if err != nil {
 		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 	}

@@ -26,7 +26,9 @@ func (app *application) SignINService(email string, password string) (*models.Us
 	}
 
 	jwt, err := app.NewJWT(*user)
-
+	if err != nil {
+		return nil, "", err
+	}
 	return user, jwt, nil
 
 }

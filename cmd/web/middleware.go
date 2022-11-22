@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"log"
 	"net/http"
 	"notmangalib.com/internal/models"
@@ -80,6 +82,28 @@ func (app *application) AuthMiddleware(next func(w http.ResponseWriter, r *http.
 				return
 			}
 		}
+		next(w, r)
+	})
+}
+
+func (app *application) isOwner(next func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		params := httprouter.ParamsFromContext(r.Context())
+		id, err := strconv.Atoi(params.ByName("id"))
+
+		ctx := r.Context()
+
+		accessToken, err := r.Cookie("AccessToken")
+		if err != nil {
+			ctx = context.WithValue(ctx, "isOwner", false)
+			r = r.WithContext(ctx)
+			log.Println(err)
+			next(w, r)
+		}
+		_, e := app.VerifyToken(accessToken.Value)
+		log.Println(e.Payload["Id"])
+		ctx = context.WithValue(ctx, "isOwner", e.Payload["Id"] == id)
+		r = r.WithContext(ctx)
 		next(w, r)
 	})
 }

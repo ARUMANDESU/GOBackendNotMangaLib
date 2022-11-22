@@ -55,7 +55,7 @@ func (app *application) NewJWT(user models.User) (string, error) {
 
 func (app *application) VerifyToken(accesstoken string) (jwt.MapClaims, *models.ErrorHandlerJwt) {
 	claims := jwt.MapClaims{}
-	_, err := jwt.ParseWithClaims(accesstoken, claims,
+	token, err := jwt.ParseWithClaims(accesstoken, claims,
 		func(token *jwt.Token) (interface{}, error) {
 			_, ok := token.Method.(*jwt.SigningMethodHMAC)
 			if !ok {
@@ -69,6 +69,7 @@ func (app *application) VerifyToken(accesstoken string) (jwt.MapClaims, *models.
 		}
 		return nil, models.HandleJWTError(nil, models.NotAuthorized)
 	}
+	claims = token.Claims.(jwt.MapClaims)
 	return claims, nil
 }
 

@@ -14,6 +14,7 @@ type Chapter struct {
 	VolumeNumber  float64   `json:"volumeNumber"`
 	Images        []string  `json:"images"`
 	Date          time.Time `json:"date"`
+	DateString    string    `json:"dateString"`
 }
 
 type ChapterModel struct {
@@ -21,8 +22,8 @@ type ChapterModel struct {
 }
 
 func (ch *ChapterModel) Insert(mangaId int, title string, chapterNum float64, volumeNum float64) (int, error) {
-	stmt := `insert into chapter(chapter_number, volume_number, title)
-				values ($1,$2,$3) returning chapterid;`
+	stmt := `insert into chapter(chapter_number, volume_number, title,date)
+				values ($1,$2,$3,current_date) returning chapterid;`
 	newChapter := Chapter{}
 	result := ch.DB.QueryRow(context.Background(), stmt, chapterNum, volumeNum, title).Scan(&newChapter.Id)
 	if result != nil {
@@ -60,8 +61,8 @@ func (ch *ChapterModel) Get(mangaId int, chapterNum float64, volumeNum float64) 
 	return &chapter, nil
 }
 
-func (ch *ChapterModel) GetMangaChapters(mangaId int) ([]*Chapter, error) {
-	stmt := `select ch.chapterid,m.mangaid,ch.title,ch.volume_number,ch.chapter_number,ch.images
+func (ch *ChapterModel) GetMangaChapters(mangaId int) ([]Chapter, error) {
+	stmt := `select ch.chapterid,m.mangaid,ch.title,ch.volume_number,ch.chapter_number,ch.images,ch.date
 			from chapter ch join manga_chapter mc on ch.chapterid = mc.chapterid 
 						join manga m on m.mangaid = mc.mangaid
 						where m.mangaid=$1`
@@ -71,10 +72,11 @@ func (ch *ChapterModel) GetMangaChapters(mangaId int) ([]*Chapter, error) {
 	}
 
 	defer rows.Close()
-	chapter := []*Chapter{}
+	chapter := []Chapter{}
 	for rows.Next() {
-		chapter1 := &Chapter{}
-		result := ch.DB.QueryRow(context.Background(), stmt, mangaId).Scan(&chapter1.Id, &chapter1.MangaId, &chapter1.Title, &chapter1.VolumeNumber, &chapter1.ChapterNumber, &chapter1.Images)
+		chapter1 := Chapter{}
+		result := rows.Scan(&chapter1.Id, &chapter1.MangaId, &chapter1.Title, &chapter1.VolumeNumber, &chapter1.ChapterNumber, &chapter1.Images, &chapter1.Date)
+		chapter1.DateString = chapter1.Date.Format("2006-1-2")
 		if result != nil {
 			return nil, result
 		}

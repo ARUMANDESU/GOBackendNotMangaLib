@@ -32,7 +32,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/signup", app.signUp)
 	router.HandlerFunc(http.MethodPost, "/signin", app.signIN)
 	router.HandlerFunc(http.MethodPost, "/logout", app.Logout)
-	router.HandlerFunc(http.MethodGet, "/user/:id", app.GetUser)
+	router.HandlerFunc(http.MethodGet, "/user/:id", app.isOwner(app.GetUser))
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
